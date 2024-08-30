@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: "../.env" });
 const express = require("express");
 const MongoClient = require("mongodb").MongoClient;
 const app = express();
@@ -18,7 +18,7 @@ const bodyParser = require("body-parser");
 const crypto = require("crypto");
 const port = 3000;
 
-const mongoURI = "mongodb://0.0.0.0:27017/AccessPay";
+const mongoURI = process.env.MONGO_URI;
 // const mongoURI = "mongodb+srv://accesspay-admin:VjlLrFU1TEC0P69I@cluster0.wv7ytnm.mongodb.net/AccessPay?retryWrites=true&w=majority&appName=Cluster0";
 let email = null;
 const admin_email_address = "accesspay2024@gmail.com";
@@ -28,7 +28,7 @@ app.use(express.json());
 // Middleware to parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
 
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use(cors());
 
