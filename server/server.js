@@ -349,7 +349,7 @@ app.get("/api/redeem-history", async (req, res) => {
   }
 });
 
-// Pavan's Login, Signup and register
+// Login, Signup and register
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -394,7 +394,7 @@ async function storeUser(Customers) {
 
 app.post("/signup", async (req, res) => {
   try {
-    let { username, email: userEmail, password, phone_number } = req.body; // Renamed local email to userEmail
+    let { username, email: userEmail, password, phone_number } = req.body;
     console.log(userEmail);
     const nameParts = username.split(" ");
     const first_name = nameParts[0];
@@ -421,7 +421,7 @@ app.post("/signup", async (req, res) => {
     const userData = {
       googleId: "",
       googleName: "",
-      email: userEmail, // Use the local userEmail variable
+      email: userEmail,
       password: password,
       first_name: first_name,
       second_name: second_name,
@@ -454,8 +454,6 @@ app.post("/verify-otp", async (req, res) => {
   try {
     // Extract OTP from req.body
     const { otp } = req.body;
-    console.log(req.session.otp);
-    console.log(otp);
     // Check if the OTP matches the one stored in the session
     if (req.session.otp == otp) {
       // OTP is correct, proceed with storing the user data in MongoDB
@@ -988,16 +986,27 @@ app.get("/loan-data", async (req, res) => {
   const db = client.db("AccessPay");
   const collection = db.collection("Customers");
 
-  const customer = await collection.findOne({ email: email });
-  if (!customer) {
-    return res.status(404).send("Customer not found.");
+  try {
+    const customer = await collection.findOne({ email: email });
+    if (!customer) {
+      return res.status(404).send("Customer not found.");
+    }
+
+    const loanData = customer.loans && customer.loans[0];
+    if (!loanData) {
+      return res.status(200).json({ message: "No loan data available" });
+    }
+
+    const monthsPaid = loanData.months_paid;
+    const monthsLeft = loanData.months_left;
+
+    res.json({ monthsPaid, monthsLeft });
+  } catch (error) {
+    console.error("Error fetching loan data:", error);
+    res.status(500).send("Error fetching loan data.");
+  } finally {
+    client.close();
   }
-
-  const loanData = customer.loans[0]; // Assuming you want to plot the first loan
-  const monthsPaid = loanData.months_paid;
-  const monthsLeft = loanData.months_left;
-
-  res.json({ monthsPaid, monthsLeft });
 });
 
 app.get("/api/loan-details", async (req, res) => {
